@@ -53,42 +53,174 @@
               paper: '#FFFFFF',
               muted: '#A1A1AA'
             },
-            fontFamily: {
-              display: ['Space Grotesk', 'sans-serif'],
-              body: ['Manrope', 'sans-serif']
-            },
-            boxShadow: {
-              gold: '0 0 32px rgba(212, 175, 55, 0.12)'
-            }
-          }
-        }
-      };
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <style>
-      :root { --ease-premium: cubic-bezier(.22, 1, .36, 1); --gold: #d4af37; }
-      html { scroll-behavior: smooth; }
-      body { background: #0e0e0e; }
-      ::selection { background: #d4af37; color: #0e0e0e; }
-      .grid-lines {
-        background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
-        background-size: 48px 48px;
-      }
-      .transition { transition-timing-function: var(--ease-premium); }
-      .nav-link { border-color: transparent !important; }
-      .fade-up { opacity: 1; }
-      .motion-reveal { opacity: 0; transform: translate3d(0, 28px, 0) scale(.985); transition: opacity .9s var(--ease-premium), transform .9s var(--ease-premium); transition-delay: var(--reveal-delay, 0ms); }
-      .motion-reveal.is-visible { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
-      .hero-title-cinematic { clip-path: inset(0 0 100% 0); transform: translateY(18px); transition: clip-path 1.15s var(--ease-premium), transform 1.15s var(--ease-premium); }
-      .hero-title-cinematic.is-visible { clip-path: inset(0); transform: translateY(0); }
-      .hero-grid { will-change: transform; }
-      .tech-card-wrap { transform-style: preserve-3d; will-change: transform; transition: transform .8s var(--ease-premium); }
-      .tech-card { position: relative; isolation: isolate; }
-      .tech-card::before { content: ''; position: absolute; z-index: -1; inset: -28px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,.2), transparent 65%); filter: blur(18px); animation: gold-pulse 5s ease-in-out infinite; pointer-events: none; }
-      .tech-online { animation: online-blink 2.8s ease-in-out infinite; }
-      .tech-flow { animation: flow-float 4s ease-in-out infinite; }
+            <script>
+              const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+              const menuButton = document.getElementById('menu-button');
+              const menu = document.getElementById('menu');
+              const header = document.querySelector('header');
+              const navLinks = [...menu.querySelectorAll('.nav-link')];
+              const sections = [...document.querySelectorAll('#about, #projects, #contact')];
+              const projectCards = [...document.querySelectorAll('#projects article')];
+              const progressBar = document.createElement('div');
+              const cursor = document.createElement('div');
+              const navUnderline = document.createElement('span');
+              const techWrap = document.querySelector('[aria-label="Engineering system visual"]');
+              const techCard = techWrap.querySelector('.relative.border');
+              const heroGrid = document.querySelector('main > section .grid-lines');
+              let rafId = 0;
+              let scrollY = window.scrollY;
+              let cursorX = -20;
+              let cursorY = -20;
+              let pointerX = -20;
+              let pointerY = -20;
+              let tiltX = 0;
+              let tiltY = 0;
+              let targetTiltX = 0;
+              let targetTiltY = 0;
+              let activeCard = null;
+              let spotX = 0;
+              let spotY = 0;
+
+              progressBar.id = 'scroll-progress';
+              cursor.id = 'custom-cursor';
+              navUnderline.id = 'nav-underline';
+              menu.classList.add('motion-menu');
+              menu.classList.remove('hidden');
+              menu.appendChild(navUnderline);
+              document.body.append(progressBar, cursor);
+
+              const moveUnderline = (link) => {
+                navUnderline.style.transform = `translate3d(${link.offsetLeft}px, 0, 0) scaleX(${link.offsetWidth})`;
+              };
+
+              const setActiveLink = (sectionId) => {
+                navLinks.forEach((link) => {
+                  const isActive = link.getAttribute('href') === `#${sectionId}`;
+                  link.classList.toggle('active', isActive);
+                  link.classList.toggle('text-gold', isActive);
+                  link.classList.toggle('text-muted', !isActive);
+                  if (isActive) moveUnderline(link);
+                });
+              };
+
+              const closeMenu = () => {
+                menuButton.setAttribute('aria-expanded', 'false');
+                menu.classList.remove('is-open');
+              };
+
+              menuButton.addEventListener('click', () => {
+                const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
+                menuButton.setAttribute('aria-expanded', String(!isOpen));
+                menu.classList.toggle('is-open', !isOpen);
+              });
+              navLinks.forEach((link) => link.addEventListener('click', () => {
+                setActiveLink(link.getAttribute('href').slice(1));
+                closeMenu();
+              }));
+
+              const revealItems = [
+                ...document.querySelectorAll('.fade-up'),
+                ...document.querySelectorAll('#about > div > div'),
+                ...document.querySelectorAll('#projects > div > div:first-child'),
+                ...projectCards,
+                document.querySelector('#contact > div')
+              ].filter(Boolean);
+              revealItems.forEach((element, index) => {
+                element.classList.add('motion-reveal');
+                element.style.setProperty('--reveal-delay', `${Math.min(index, 5) * 85}ms`);
+              });
+              projectCards.forEach((card, index) => card.style.setProperty('--reveal-delay', `${index * 120}ms`));
+              const heroTitle = document.getElementById('hero-title');
+              heroTitle.classList.add('hero-title-cinematic');
+              heroTitle.classList.remove('motion-reveal');
+              techWrap.classList.add('tech-card-wrap');
+              techCard.classList.add('tech-card');
+              techCard.querySelector('.flex.items-center.justify-between').lastElementChild.classList.add('tech-online');
+              techCard.querySelector('.grid-lines > div:nth-child(2)').classList.add('tech-flow');
+              techCard.lastElementChild.classList.add('tech-precision');
+              document.querySelector('#about > div > div:last-child').classList.add('about-photo');
+              document.querySelector('#contact > div').classList.add('contact-panel');
+              document.querySelectorAll('#contact a').forEach((link) => link.classList.add('contact-link'));
+              projectCards.forEach((card) => {
+                card.classList.add('project-card');
+                card.querySelector('.font-mono.text-xs').classList.add('project-number');
+                card.querySelector('[aria-hidden="true"]').classList.add('project-arrow');
+              });
+
+              const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach((entry) => {
+                  if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    entry.target.style.removeProperty('will-change');
+                    observer.unobserve(entry.target);
+                  }
+                });
+              }, { rootMargin: '0px 0px -10% 0px', threshold: 0.12 });
+              if (reduceMotion) {
+                revealItems.forEach((element) => element.classList.add('is-visible'));
+                heroTitle.classList.add('is-visible');
+              } else {
+                revealItems.forEach((element) => revealObserver.observe(element));
+                revealObserver.observe(heroTitle);
+              }
+
+              const sectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => { if (entry.isIntersecting) setActiveLink(entry.target.id); });
+              }, { rootMargin: '-35% 0px -55% 0px', threshold: 0 });
+              sections.forEach((section) => sectionObserver.observe(section));
+
+              const render = () => {
+                rafId = 0;
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                progressBar.style.transform = `scaleX(${maxScroll > 0 ? scrollY / maxScroll : 0})`;
+                header.classList.toggle('is-scrolled', scrollY > 24);
+                if (!reduceMotion) {
+                  heroGrid.style.transform = `translate3d(0, ${scrollY * 0.12}px, 0)`;
+                  cursorX += (pointerX - cursorX) * 0.17;
+                  cursorY += (pointerY - cursorY) * 0.17;
+                  cursor.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate3d(-50%, -50%, 0)`;
+                  tiltX += (targetTiltX - tiltX) * 0.16;
+                  tiltY += (targetTiltY - tiltY) * 0.16;
+                  techWrap.style.transform = `perspective(900px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`;
+                  if (activeCard) {
+                    activeCard.style.setProperty('--spot-x', `${spotX}px`);
+                    activeCard.style.setProperty('--spot-y', `${spotY}px`);
+                  }
+                  if (Math.abs(pointerX - cursorX) > 0.1 || Math.abs(pointerY - cursorY) > 0.1 || Math.abs(targetTiltX - tiltX) > 0.1 || Math.abs(targetTiltY - tiltY) > 0.1) requestRender();
+                }
+              };
+              const requestRender = () => { if (!rafId) rafId = requestAnimationFrame(render); };
+              window.addEventListener('scroll', () => { scrollY = window.scrollY; requestRender(); }, { passive: true });
+
+              if (!reduceMotion && finePointer) {
+                window.addEventListener('pointermove', (event) => { pointerX = event.clientX; pointerY = event.clientY; cursor.style.opacity = '1'; requestRender(); }, { passive: true });
+                document.querySelectorAll('a, button, article').forEach((element) => {
+                  element.addEventListener('pointerenter', () => cursor.classList.add('is-hovering'));
+                  element.addEventListener('pointerleave', () => cursor.classList.remove('is-hovering'));
+                });
+                techWrap.addEventListener('pointermove', (event) => {
+                  const bounds = techWrap.getBoundingClientRect();
+                  targetTiltY = ((event.clientX - bounds.left) / bounds.width - 0.5) * 8;
+                  targetTiltX = ((event.clientY - bounds.top) / bounds.height - 0.5) * -8;
+                  requestRender();
+                }, { passive: true });
+                techWrap.addEventListener('pointerleave', () => { targetTiltX = 0; targetTiltY = 0; requestRender(); });
+                projectCards.forEach((card) => card.addEventListener('pointermove', (event) => {
+                  const bounds = card.getBoundingClientRect();
+                  activeCard = card;
+                  spotX = event.clientX - bounds.left;
+                  spotY = event.clientY - bounds.top;
+                  requestRender();
+                }, { passive: true }));
+                projectCards.forEach((card) => card.addEventListener('pointerleave', () => { if (activeCard === card) activeCard = null; }));
+              }
+
+              window.addEventListener('resize', () => { moveUnderline(menu.querySelector('.active') || navLinks[navLinks.length - 1]); });
+              setActiveLink('contact');
+              requestRender();
+              document.getElementById('year').textContent = new Date().getFullYear();
+            </script>
       .tech-precision { animation: precision-pulse 3.2s ease-in-out infinite; }
       .about-photo { isolation: isolate; }
       .about-photo::after { content: ''; position: absolute; z-index: 1; left: -35%; top: -20%; width: 45%; height: 150%; background: linear-gradient(90deg, transparent, rgba(212,175,55,.2), transparent); transform: rotate(18deg); animation: photo-light 6s ease-in-out infinite; pointer-events: none; }
