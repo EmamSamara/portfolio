@@ -356,6 +356,13 @@
       let targetCursorY = -20;
       let cursorX = targetCursorX;
       let cursorY = targetCursorY;
+      let targetTiltX = 0;
+      let targetTiltY = 0;
+      let tiltX = 0;
+      let tiltY = 0;
+      let activeCard = null;
+      let spotX = 0;
+      let spotY = 0;
 
       progressBar.id = 'scroll-progress';
       cursor.id = 'custom-cursor';
@@ -368,8 +375,7 @@
       menu.appendChild(navUnderline);
 
       const moveUnderline = (link) => {
-        navUnderline.style.width = `${link.offsetWidth}px`;
-        navUnderline.style.transform = `translateX(${link.offsetLeft}px)`;
+        navUnderline.style.transform = `translate3d(${link.offsetLeft}px, 0, 0) scaleX(${link.offsetWidth})`;
       };
 
       const setActiveLink = (sectionId) => {
