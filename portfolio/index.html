@@ -1,20 +1,55 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="The portfolio of Emam Samara, a Computer Engineering Student at Birzeit University." />
-    <title>Emam Samara | Computer Engineering</title>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              ink: '#0E0E0E',
-              obsidian: '#181818',
-              gold: '#D4AF37',
+    <style>
+      :root { --ease-premium: cubic-bezier(.22, 1, .36, 1); --gold: #d4af37; }
+      html { scroll-behavior: smooth; }
+      body { background: #0e0e0e; }
+      ::selection { background: #d4af37; color: #0e0e0e; }
+      .grid-lines { background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 48px 48px; }
+      .fade-up, .motion-reveal { opacity: 0; transform: translate3d(0, 26px, 0) scale(.985); transition: opacity .85s var(--ease-premium), transform .85s var(--ease-premium); transition-delay: var(--reveal-delay, 0ms); will-change: transform, opacity; }
+      .motion-reveal.is-visible, .fade-up.is-visible { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+      .hero-title-cinematic { clip-path: inset(0 0 100% 0); transform: translate3d(0, 18px, 0); transition: clip-path 1.1s var(--ease-premium), transform 1.1s var(--ease-premium); }
+      .hero-title-cinematic.is-visible { clip-path: inset(0); transform: translate3d(0, 0, 0); }
+      .hero-grid { will-change: transform; }
+      .tech-card-wrap { transform-style: preserve-3d; will-change: transform; transition: transform .7s var(--ease-premium); }
+      .tech-card { position: relative; isolation: isolate; }
+      .tech-card::before { content: ''; position: absolute; z-index: -1; inset: -28px; border-radius: 50%; background: radial-gradient(circle, rgba(212,175,55,.2), transparent 65%); filter: blur(18px); animation: gold-pulse 5s ease-in-out infinite; pointer-events: none; }
+      .tech-online { animation: online-blink 2.8s ease-in-out infinite; }
+      .tech-flow { animation: flow-float 4s ease-in-out infinite; }
+      .tech-precision { animation: precision-pulse 3.2s ease-in-out infinite; }
+      .about-photo { position: relative; isolation: isolate; }
+      .about-photo::after { content: ''; position: absolute; z-index: 1; left: -35%; top: -20%; width: 45%; height: 150%; background: linear-gradient(90deg, transparent, rgba(212,175,55,.2), transparent); transform: rotate(18deg); animation: photo-light 6s ease-in-out infinite; pointer-events: none; }
+      .project-card { position: relative; isolation: isolate; overflow: hidden; transform: translateZ(0); }
+      .project-card::before { content: ''; position: absolute; z-index: -1; inset: 0; opacity: 0; background: radial-gradient(260px circle at var(--spot-x, 50%) var(--spot-y, 50%), rgba(212,175,55,.14), transparent 70%); transition: opacity .5s var(--ease-premium); pointer-events: none; }
+      .project-card:hover::before { opacity: 1; }
+      .project-number, .project-arrow { transition: transform .5s var(--ease-premium), color .5s var(--ease-premium); }
+      .project-card:hover .project-number { transform: translateX(5px); }
+      .project-card:hover .project-arrow { transform: translate(5px, -5px) rotate(6deg); }
+      .contact-panel { position: relative; overflow: hidden; }
+      .contact-panel::after { content: ''; position: absolute; right: 0; top: 32px; width: 34%; height: 1px; background: linear-gradient(90deg, transparent, rgba(212,175,55,.7)); animation: contact-line 4.5s ease-in-out infinite; }
+      .contact-link { position: relative; }
+      .contact-link::after { content: ''; position: absolute; left: 0; right: 0; bottom: -5px; height: 1px; background: var(--gold); transform: scaleX(0); transform-origin: right; transition: transform .55s var(--ease-premium); }
+      .contact-link:hover::after { transform: scaleX(1); transform-origin: left; }
+      #scroll-progress { position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left; pointer-events: none; }
+      #custom-cursor { position: fixed; z-index: 110; width: 9px; height: 9px; border: 1px solid var(--gold); border-radius: 50%; opacity: 0; pointer-events: none; transform: translate3d(-50%, -50%, 0); transition: opacity .3s ease, width .3s var(--ease-premium), height .3s var(--ease-premium), background .3s ease; }
+      #custom-cursor.is-hovering { width: 24px; height: 24px; background: rgba(212,175,55,.12); }
+      header { transition: padding .5s var(--ease-premium), background-color .5s var(--ease-premium), box-shadow .5s var(--ease-premium); }
+      header.is-scrolled nav { padding-top: 14px; padding-bottom: 14px; }
+      header.is-scrolled { box-shadow: 0 10px 35px rgba(0,0,0,.22); background-color: rgba(14,14,14,.94); }
+      #menu.motion-menu { transition: opacity .45s var(--ease-premium), transform .45s var(--ease-premium), visibility .45s var(--ease-premium); }
+      #menu.motion-menu:not(.is-open) { opacity: 0; visibility: hidden; transform: translate3d(0, -10px, 0); }
+      #menu.motion-menu.is-open { opacity: 1; visibility: visible; transform: translate3d(0, 0, 0); }
+      #nav-underline { position: absolute; bottom: 0; left: 0; width: 1px; height: 1px; background: var(--gold); transform-origin: left; transform: translate3d(0, 0, 0) scaleX(0); transition: transform .65s var(--ease-premium); pointer-events: none; }
+      @keyframes gold-pulse { 0%, 100% { opacity: .5; transform: scale(.94); } 50% { opacity: .9; transform: scale(1.06); } }
+      @keyframes online-blink { 0%, 100% { opacity: .55; } 50% { opacity: 1; text-shadow: 0 0 12px rgba(212,175,55,.75); } }
+      @keyframes flow-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+      @keyframes precision-pulse { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
+      @keyframes photo-light { 0%, 30% { transform: translateX(-160%) rotate(18deg); } 70%, 100% { transform: translateX(430%) rotate(18deg); } }
+      @keyframes contact-line { 0%, 100% { opacity: .3; transform: scaleX(.65); } 50% { opacity: .9; transform: scaleX(1); } }
+      @media (hover: hover) and (pointer: fine) { body { cursor: none; } a, button { cursor: none; } }
+      @media (min-width: 768px) { #menu.motion-menu { opacity: 1 !important; visibility: visible !important; transform: none !important; } }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } .fade-up, .motion-reveal, .hero-title-cinematic { opacity: 1; transform: none; clip-path: none; } #custom-cursor, #scroll-progress, #nav-underline { display: none; } }
+    </style>
               paper: '#FFFFFF',
               muted: '#A1A1AA'
             },
